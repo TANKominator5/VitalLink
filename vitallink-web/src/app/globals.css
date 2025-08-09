@@ -75,6 +75,22 @@
   }
 }
 
+/* 5. Custom component styles */
+@layer components {
+  .input-field {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid hsl(var(--input));
+    border-radius: 0.375rem;
+    background-color: hsl(var(--background));
+    outline: none;
+  }
+  
+  .input-field:focus {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+}
+
 /* 5. Subtle hover and focus animations */
 @layer utilities {
   .smooth-hover {

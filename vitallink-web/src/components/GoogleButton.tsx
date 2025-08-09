@@ -2,6 +2,7 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { useState } from "react";
 
 // Custom Google Logo SVG Component
 const GoogleIcon = () => (
@@ -25,25 +26,37 @@ const GoogleIcon = () => (
   </svg>
 );
 
-export const GoogleButton = () => {
+type GoogleButtonProps = {
+  selectedRole?: string;
+};
+
+export const GoogleButton = ({ selectedRole = 'donor' }: GoogleButtonProps) => {
   const supabase = createClient();
+  const [isLoading, setIsLoading] = useState(false);
   
   const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${location.origin}/auth/callback`,
-      },
-    });
+    setIsLoading(true);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${location.origin}/auth/callback?role=${selectedRole}`,
+        },
+      });
+    } catch (error) {
+      console.error('Google login error:', error);
+    }
+    setIsLoading(false);
   };
 
   return (
     <button
       onClick={handleGoogleLogin}
-      className="flex items-center justify-center w-full px-4 py-2 border border-border rounded-md hover:bg-accent transition-colors duration-200"
+      disabled={isLoading}
+      className="flex items-center justify-center w-full px-4 py-2 border border-border rounded-md hover:bg-accent transition-colors duration-200 disabled:opacity-50"
     >
       <GoogleIcon />
-      Sign in with Google
+      {isLoading ? 'Signing in...' : 'Sign in with Google'}
     </button>
   );
 };

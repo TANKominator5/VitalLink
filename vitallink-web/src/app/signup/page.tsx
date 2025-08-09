@@ -100,7 +100,7 @@ export default function SignUpPage() {
           </div>
         </div>
 
-        <GoogleButton />
+        <GoogleButton selectedRole={role} />
 
         <p className="text-sm text-center text-muted-foreground">
           Already have an account?{' '}

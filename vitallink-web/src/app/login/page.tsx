@@ -11,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [role, setRole] = useState('donor'); // For Google OAuth role selection
   const router = useRouter();
   const supabase = createClient();
 
@@ -18,16 +19,28 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
       setError(error.message);
-    } else {
-      // On successful login, redirect to a protected page
-      router.push('/dashboard'); 
+    } else if (data.user) {
+      // Get user's role from metadata or profile
+      const userRole = data.user.user_metadata?.role;
+      
+      // Redirect based on role
+      if (userRole === 'donor') {
+        router.push('/onboarding/donor');
+      } else if (userRole === 'recipient') {
+        router.push('/onboarding/recipient');
+      } else if (userRole === 'medical_professional') {
+        router.push('/dashboard');
+      } else {
+        // If no role is set, redirect to default dashboard
+        router.push('/dashboard');
+      }
       router.refresh();
     }
   };
@@ -91,7 +104,21 @@ export default function LoginPage() {
           </div>
         </div>
         
-        <GoogleButton />
+        <div className="mb-4">
+          <label htmlFor="google-role" className="text-sm font-medium mb-2 block">For Google sign-in, I am a:</label>
+          <select
+            id="google-role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full px-3 py-2 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="donor">Donor</option>
+            <option value="recipient">Recipient</option>
+            <option value="medical_professional">Medical Professional</option>
+          </select>
+        </div>
+        
+        <GoogleButton selectedRole={role} />
 
         <p className="text-sm text-center text-muted-foreground">
           Need to create an account?{' '}
