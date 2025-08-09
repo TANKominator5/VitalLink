@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/browser';
 import { useRouter } from 'next/navigation';
 import { GoogleButton } from '@/components/GoogleButton';
 

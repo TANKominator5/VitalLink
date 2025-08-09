@@ -3,13 +3,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/client';
-import { GoogleButton } from '@/components/GoogleButton';
+import { createClient } from '@/lib/supabase/browser';
+import { GoogleButton } from '@/components/GoogleButton'; // Make sure this is imported
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('donor'); // 'donor' or 'medical_professional'
+  const [role, setRole] = useState('donor'); // Default role
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const supabase = createClient();
@@ -23,10 +23,7 @@ export default function SignUpPage() {
       email,
       password,
       options: {
-        // Add custom metadata for the user's role
-        data: {
-          role: role,
-        }
+        data: { role: role } // This part handles email/password signup role
       }
     });
 
@@ -38,7 +35,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <div className="w-full max-w-md p-8 space-y-6 bg-card text-card-foreground border border-border rounded-lg shadow-md">
         <div className="text-center">
           <h1 className="text-3xl font-bold">Sign up to your account</h1>
@@ -46,18 +43,19 @@ export default function SignUpPage() {
         </div>
 
         <form onSubmit={handleSignUp} className="space-y-4">
-            <div>
+          <div>
             <label htmlFor="role" className="text-sm font-medium">This account is for</label>
             <select
-                id="role"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                className="w-full px-3 py-2 mt-1 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring">
-                <option value="donor">A Donor</option>
-                <option value="recipient">A Recipient</option>
-                <option value="medical_professional">A Medical Professional</option>
+              id="role"
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              className="w-full px-3 py-2 mt-1 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <option value="donor">A Donor</option>
+              <option value="recipient">A Recipient</option>
+              <option value="medical_professional">A Medical Professional</option>
             </select>
-            </div>
+          </div>
 
           <div>
             <label htmlFor="email" className="text-sm font-medium">Email <span className="text-red-500">*</span></label>
@@ -100,6 +98,7 @@ export default function SignUpPage() {
           </div>
         </div>
 
+        {/* Pass the selected role to the GoogleButton component */}
         <GoogleButton selectedRole={role} />
 
         <p className="text-sm text-center text-muted-foreground">

@@ -22,11 +22,13 @@ export default async function DashboardPage() {
 
   // If there's no profile or it's not complete, redirect to the correct setup page
   if (!profile || !profile.profile_complete) {
-    if (profile?.role === 'donor') {
+    const role = profile?.role || user.user_metadata?.role;
+    
+    if (role === 'donor') {
       return redirect('/onboarding/donor');
-    } else if (profile?.role === 'recipient') {
+    } else if (role === 'recipient') {
       return redirect('/onboarding/recipient');
-    } else if (profile?.role === 'medical_professional') {
+    } else if (role === 'medical_professional') {
       // You can create a setup page for medical professionals later
       // For now, we'll just let them pass
     } else {
@@ -40,7 +42,7 @@ export default async function DashboardPage() {
     <div className="container mx-auto px-4 py-12">
       <header className="mb-8">
         <h1 className="text-4xl font-bold text-foreground">
-          Welcome, {profile.full_name || 'User'}!
+          Welcome, {profile?.full_name || user?.email?.split('@')[0] || 'User'}!
         </h1>
         <p className="text-muted-foreground mt-2">
           This is your main hub. All your information and updates will appear here.
@@ -57,7 +59,7 @@ export default async function DashboardPage() {
               {user.email}
             </p>
             <span className="text-sm font-medium text-white px-2 py-1 rounded-full bg-blue-600 capitalize">
-              {profile.role.replace('_', ' ')}
+              {profile?.role ? profile.role.replace('_', ' ') : 'User'}
             </span>
           </div>
         </div>

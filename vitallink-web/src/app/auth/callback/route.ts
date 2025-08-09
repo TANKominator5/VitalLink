@@ -1,17 +1,19 @@
 // src/app/auth/callback/route.ts
 
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
-  const role = requestUrl.searchParams.get('role') // Get role from URL parameter
+  const role = requestUrl.searchParams.get('role') // Get role passed from GoogleButton
 
   if (code) {
     const supabase = createClient()
+    
     try {
+      // Exchange the code for a user session
       const { data, error } = await supabase.auth.exchangeCodeForSession(code)
       
       if (error) {
@@ -46,6 +48,6 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // Default redirect to homepage if no specific role is found
-  return NextResponse.redirect(new URL('/', requestUrl.origin))
+  // Default redirect to dashboard which will handle further redirects
+  return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
 }

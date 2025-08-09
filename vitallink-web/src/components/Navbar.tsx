@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ThemeToggle } from './ThemeToggle';
 
 // We can now have three distinct roles
-type UserRole = 'donor' | 'admin' | 'none';
+type UserRole = 'donor' | 'recipient' | 'medical_professional' | 'none';
 
 type NavbarProps = {
   userRole: UserRole;
@@ -30,7 +30,7 @@ const Navbar = ({ userRole }: NavbarProps) => {
             )}
 
             {/* --- When logged in as DONOR/PATIENT --- */}
-            {userRole === 'donor' && (
+            {(userRole === 'donor' || userRole === 'recipient') && (
               <>
                 <Link href="/dashboard" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Dashboard</Link>
                 <Link href="/profile" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">My Profile</Link>
@@ -38,11 +38,12 @@ const Navbar = ({ userRole }: NavbarProps) => {
               </>
             )}
             
-            {/* Add admin links later if needed */}
-            {userRole === 'admin' && (
+            {/* --- When logged in as MEDICAL PROFESSIONAL --- */}
+            {userRole === 'medical_professional' && (
               <>
-                <Link href="/admin/dashboard" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Admin Dashboard</Link>
-                <Link href="/admin/users" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Manage Users</Link>
+                <Link href="/dashboard" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Dashboard</Link>
+                <Link href="/patients" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Patients</Link>
+                <Link href="/records" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Medical Records</Link>
               </>
             )}
           </div>
