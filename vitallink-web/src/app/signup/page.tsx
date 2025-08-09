@@ -46,18 +46,18 @@ export default function SignUpPage() {
         </div>
 
         <form onSubmit={handleSignUp} className="space-y-4">
-          <div>
+            <div>
             <label htmlFor="role" className="text-sm font-medium">This account is for</label>
             <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="donor">A Donor / Recipient</option>
-              <option value="medical_professional">A Medical Professional</option>
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full px-3 py-2 mt-1 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring">
+                <option value="donor">A Donor</option>
+                <option value="recipient">A Recipient</option>
+                <option value="medical_professional">A Medical Professional</option>
             </select>
-          </div>
+            </div>
 
           <div>
             <label htmlFor="email" className="text-sm font-medium">Email <span className="text-red-500">*</span></label>

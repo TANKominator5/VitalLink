@@ -84,4 +84,43 @@
   .smooth-hover:hover {
     transform: translateY(-1px);
   }
+
+  /* Animation delay utilities */
+  .animation-delay-150 {
+    animation-delay: 150ms;
+  }
+  
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  /* Custom keyframe animations for theme toggle */
+  @keyframes theme-spin {
+    from {
+      transform: rotate(0deg) scale(1);
+    }
+    50% {
+      transform: rotate(180deg) scale(1.1);
+    }
+    to {
+      transform: rotate(360deg) scale(1);
+    }
+  }
+
+  .animate-theme-spin {
+    animation: theme-spin 0.6s ease-in-out;
+  }
+
+  @keyframes gentle-bounce {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-2px) scale(1.05);
+    }
+  }
+
+  .animate-gentle-bounce {
+    animation: gentle-bounce 0.4s ease-out;
+  }
 }
