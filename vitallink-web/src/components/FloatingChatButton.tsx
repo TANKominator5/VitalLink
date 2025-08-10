@@ -69,7 +69,7 @@ export default function FloatingChatButton() {
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: 'assistant',
-        content: 'Hello! I\'m your VitalLink AI Assistant. I can help you with information about your profile. You can ask me about your blood type, account details, or any other profile information. How can I assist you today?',
+        content: 'Hello! I\'m your VitalLink AI Assistant. I can help you with information about your profile, answer general health questions, or provide guidance on organ donation. Feel free to ask me anything about your account, blood types, medical topics, or how organ donation works. How can I assist you today?',
         timestamp: new Date()
       }])
     }
@@ -204,7 +204,7 @@ export default function FloatingChatButton() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about your health profile..."
+                  placeholder="Ask me anything about health or your profile..."
                   className={`w-full px-4 py-2.5 text-sm border rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                     isDarkMode 
                       ? 'border-gray-600 bg-gray-800 text-gray-100 placeholder:text-gray-400' 

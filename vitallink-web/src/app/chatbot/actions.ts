@@ -91,6 +91,40 @@ export async function generateAndStoreEmbeddings(userId: string) {
   }
 }
 
+/**
+ * Handle general questions without profile context using Groq
+ */
+async function handleGeneralQuestion(question: string) {
+    try {
+        const prompt = `
+            You are VitalLink Assistant, a helpful AI companion for the VitalLink organ donation platform. 
+            You are answering a general question that doesn't require specific user profile information.
+
+            Provide helpful, accurate, and supportive information about:
+            - General health and medical topics
+            - Organ donation information and processes
+            - Blood type compatibility and medical facts
+            - Healthcare guidance and support
+
+            Be friendly, professional, and maintain a caring tone suitable for a healthcare context.
+            If asked about something completely unrelated to health or the platform, politely redirect to health-related topics.
+
+            Question: "${question}"
+        `;
+
+        const completion = await groq.chat.completions.create({
+            messages: [{ role: "user", content: prompt }],
+            model: "llama3-70b-8192",
+        });
+
+        return { answer: completion.choices[0]?.message?.content || "Sorry, I could not generate a response." };
+
+    } catch (error) {
+        console.error("Error in handleGeneralQuestion:", error);
+        return { error: "Sorry, I'm having trouble processing your question right now." };
+    }
+}
+
 
 /**
  * Action 2: The main RAG function to ask a question.
@@ -110,14 +144,78 @@ export async function askAI(question: string) {
             return await askAISimple(question, user.id);
         }
 
-        // 3. Create an embedding from the user's question
+        // 3. First, check if this is a general question that doesn't need profile data
+        const lowerQuestion = question.toLowerCase();
+        
+        // Check for profile-specific indicators first
+        const profileIndicators = [
+            'my', 'mine', 'i am', "i'm", 'my profile', 'my account', 'my information',
+            'what is my', 'tell me my', 'show me my', 'what are my'
+        ];
+        
+        const hasProfileIndicators = profileIndicators.some(indicator => 
+            lowerQuestion.includes(indicator)
+        );
+
+        // General question patterns (medical/health questions that don't need personal data)
+        const generalQuestionPatterns = [
+            // Greetings and basic interactions
+            'hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening',
+            'help', 'what can you do', 'what are your capabilities',
+            
+            // General medical/health questions
+            'will i die', 'is it safe', 'what happens if', 'what are the risks',
+            'how does', 'what is', 'why does', 'can you explain',
+            'what are the side effects', 'what are the benefits',
+            'how long does', 'how often', 'when should',
+            
+            // General organ donation questions
+            'what is organ donation', 'how does organ donation work', 'organ donation process',
+            'what are the benefits', 'why donate', 'how to become donor',
+            'what organs can be donated', 'organ transplant', 'transplantation',
+            
+            // General blood/medical questions
+            'blood donation', 'donate blood', 'giving blood', 'blood drive',
+            'blood type compatibility', 'blood types', 'blood groups',
+            'what blood type', 'which blood type', 'blood type matching',
+            
+            // Health and medical general questions
+            'health', 'medical', 'disease', 'condition', 'treatment',
+            'diagnosis', 'symptoms', 'medicine', 'medication',
+            
+            // Polite interactions
+            'thank you', 'thanks', 'bye', 'goodbye'
+        ];
+
+        // Check if it's a general question
+        const isGeneralQuestion = generalQuestionPatterns.some(pattern => 
+            lowerQuestion.includes(pattern)
+        ) && !hasProfileIndicators;
+
+        // Special cases: Override profile routing for clearly general medical questions
+        const generalMedicalOverrides = [
+            'will i die', 'is it dangerous', 'what are the risks', 'side effects',
+            'how safe is', 'what happens if i donate', 'donate blood',
+            'blood donation risks', 'organ donation risks'
+        ];
+        
+        const isGeneralMedical = generalMedicalOverrides.some(pattern => 
+            lowerQuestion.includes(pattern)
+        );
+
+        if (isGeneralQuestion || isGeneralMedical) {
+            // Handle as general question without profile context
+            return await handleGeneralQuestion(question);
+        }
+
+        // 4. Create an embedding from the user's question
         const embeddingResponse = await openai.embeddings.create({
             model: "text-embedding-3-small",
             input: question,
         });
         const questionEmbedding = embeddingResponse.data[0].embedding;
 
-        // 4. Retrieve relevant profile data from vector DB
+        // 5. Retrieve relevant profile data from vector DB
         const { data: documents, error: matchError } = await supabase.rpc('match_user_profile', {
             p_user_id: user.id,
             p_query_embedding: questionEmbedding,
@@ -133,22 +231,29 @@ export async function askAI(question: string) {
 
         const contextText = (documents as ProfileDocument[]).map((doc: ProfileDocument) => doc.content).join("\n\n");
 
-        // 5. Construct the prompt for the LLM
+        // 6. Construct the prompt for the LLM
         const prompt = `
-            You are a helpful AI assistant for the VitalLink platform. Your role is to answer questions based ONLY on the user's profile information provided below.
-            Do not make up information or answer questions outside of this context.
-            If the answer is not in the provided context, say "That information is not available in your profile."
+            You are VitalLink Assistant, a helpful AI companion for the VitalLink organ donation platform. You have two main roles:
+
+            1. Answer questions about the user's specific profile information (provided below)
+            2. Answer general health, medical, and organ donation related questions
 
             Here is the user's profile information:
             ---
             ${contextText}
             ---
 
-            Based on this information, please answer the following question:
+            Guidelines:
+            - For questions about the user's specific information (blood type, account details, etc.), use the profile data above
+            - For general health, medical, or organ donation questions, provide helpful and accurate information
+            - Be friendly, supportive, and informative
+            - If asked about something completely unrelated to health or the platform, politely redirect to health-related topics
+            - Always maintain a caring and professional tone suitable for a healthcare context
+
             Question: "${question}"
         `;
 
-        // 6. Call Groq with the Llama 3.1 70B model
+        // 7. Call Groq with the Llama 3.1 70B model
         const completion = await groq.chat.completions.create({
             messages: [{ role: "user", content: prompt }],
             model: "llama3-70b-8192", 
@@ -227,12 +332,35 @@ async function askAISimple(question: string, userId: string) {
             return { answer: `Current diagnosis: ${diagnosis}.` };
         }
 
-        // Default response
+        // Default response for general questions
+        if (lowerQuestion.includes('hello') || lowerQuestion.includes('hi')) {
+            return { answer: "Hello! I'm your VitalLink AI Assistant. I can help you with information about your profile or answer general health and organ donation questions. How can I assist you today?" };
+        }
+        
+        if (lowerQuestion.includes('help') || lowerQuestion.includes('what can you do')) {
+            return { answer: `I can help you with:
+• Your profile information (blood type, account details, etc.)
+• General health and medical questions
+• Organ donation information
+• Platform guidance and support
+
+What would you like to know?` };
+        }
+        
+        if (lowerQuestion.includes('organ donation') || lowerQuestion.includes('donate organ')) {
+            return { answer: "Organ donation is a life-saving medical process where healthy organs from a donor are transplanted to recipients who need them. It can save multiple lives - one donor can potentially help up to 8 people through organ donation and many more through tissue donation. Would you like to know more about the donation process or your profile?" };
+        }
+        
+        if (lowerQuestion.includes('blood type') && lowerQuestion.includes('important')) {
+            return { answer: "Blood type compatibility is crucial for organ transplantation. Donors and recipients must have compatible blood types to prevent rejection. Your blood type determines which organs you can donate or receive. Type O donors are universal donors for many organs, while Type AB recipients can often receive from multiple blood types." };
+        }
+
+        // Default response for unrecognized questions
         return { 
-            answer: `I can help you with information about your profile. You can ask me about your blood type, name, account type, date of birth, ${
-                profile.role === 'donor' ? 'organs you\'re willing to donate, ' : 
-                profile.role === 'recipient' ? 'organs you need, ' : ''
-            }or medical conditions.` 
+            answer: `I can help you with information about your profile${
+                profile.role === 'donor' ? ' (including organs you\'re willing to donate)' : 
+                profile.role === 'recipient' ? ' (including organs you need)' : ''
+            }, general health questions, or organ donation information. You can ask me about your blood type, account details, medical conditions, or general health topics. What would you like to know?` 
         };
 
     } catch (error) {
