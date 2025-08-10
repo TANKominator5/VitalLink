@@ -21,7 +21,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
  * This should be called whenever a user's profile is updated.
  */
 export async function generateAndStoreEmbeddings(userId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   try {
     // 1. Fetch all profile data for the user
@@ -130,7 +130,7 @@ async function handleGeneralQuestion(question: string) {
  * Action 2: The main RAG function to ask a question.
  */
 export async function askAI(question: string) {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // 1. Get current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -272,7 +272,7 @@ export async function askAI(question: string) {
  * Fallback function that works without external APIs
  */
 async function askAISimple(question: string, userId: string) {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     try {
         // Fetch user profile data directly

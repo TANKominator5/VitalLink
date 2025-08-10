@@ -10,7 +10,7 @@ import { generateAndStoreEmbeddings } from "../chatbot/actions"; // This imports
  * After a successful update, it calls the embedding function to keep the AI's knowledge up-to-date.
  */
 export async function updateProfile(formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // 1. Get the current user session
   const { data: { user } } = await supabase.auth.getUser();

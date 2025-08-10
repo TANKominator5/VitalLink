@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const role = requestUrl.searchParams.get('role') // Get role passed from GoogleButton
 
   if (code) {
-    const supabase = createClient()
+    const supabase = await createClient()
     
     try {
       // Exchange the code for a user session
@@ -22,24 +22,36 @@ export async function GET(request: NextRequest) {
       }
 
       if (data.user) {
+        // Check if user already has a complete profile
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('profile_complete, role')
+          .eq('id', data.user.id)
+          .single();
+
+        // If user has a complete profile, redirect to dashboard
+        if (existingProfile && existingProfile.profile_complete) {
+          return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+        }
+
         // If role was passed via URL parameter (Google OAuth), use it
-        // Otherwise, try to get from user metadata (email/password signup)
-        const userRole = role || data.user.user_metadata?.role
+        // Otherwise, try to get from user metadata (email/password signup) or existing profile
+        const userRole = role || data.user.user_metadata?.role || existingProfile?.role;
 
         // Update user metadata with role if it came from URL parameter
         if (role && !data.user.user_metadata?.role) {
           await supabase.auth.updateUser({
             data: { role: role }
-          })
+          });
         }
 
-        // Redirect based on role
+        // For new users or incomplete profiles, redirect to appropriate onboarding
         if (userRole === 'donor') {
-          return NextResponse.redirect(new URL('/onboarding/donor', requestUrl.origin))
+          return NextResponse.redirect(new URL('/onboarding/donor', requestUrl.origin));
         } else if (userRole === 'recipient') {
-          return NextResponse.redirect(new URL('/onboarding/recipient', requestUrl.origin))
+          return NextResponse.redirect(new URL('/onboarding/recipient', requestUrl.origin));
         } else if (userRole === 'medical_professional') {
-          return NextResponse.redirect(new URL('/dashboard', requestUrl.origin))
+          return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
         }
       }
     } catch (error) {

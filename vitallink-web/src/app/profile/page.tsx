@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { UserProfileClient } from "./UserProfileClient"; // We will create this next
 
 export default async function ProfilePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {

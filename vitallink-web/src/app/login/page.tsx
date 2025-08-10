@@ -27,19 +27,31 @@ export default function LoginPage() {
     if (error) {
       setError(error.message);
     } else if (data.user) {
-      // Get user's role from metadata or profile
-      const userRole = data.user.user_metadata?.role;
-      
-      // Redirect based on role
-      if (userRole === 'donor') {
-        router.push('/onboarding/donor');
-      } else if (userRole === 'recipient') {
-        router.push('/onboarding/recipient');
-      } else if (userRole === 'medical_professional') {
+      // Check if user has completed their profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('profile_complete, role')
+        .eq('id', data.user.id)
+        .single();
+
+      // If profile is complete, go to dashboard
+      if (profile && profile.profile_complete) {
         router.push('/dashboard');
       } else {
-        // If no role is set, redirect to default dashboard
-        router.push('/dashboard');
+        // Get user's role from profile or metadata
+        const userRole = profile?.role || data.user.user_metadata?.role;
+        
+        // Redirect based on role for incomplete profiles
+        if (userRole === 'donor') {
+          router.push('/onboarding/donor');
+        } else if (userRole === 'recipient') {
+          router.push('/onboarding/recipient');
+        } else if (userRole === 'medical_professional') {
+          router.push('/dashboard');
+        } else {
+          // If no role is set, redirect to default dashboard
+          router.push('/dashboard');
+        }
       }
       router.refresh();
     }

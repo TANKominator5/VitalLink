@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { User, ShieldCheck } from "lucide-react";
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // 1. Get user session
   const { data: { user } } = await supabase.auth.getUser();

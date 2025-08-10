@@ -98,8 +98,49 @@ export default function RecipientSetupPage() {
                         <textarea id="diagnosed_with" name="diagnosed_with" rows={3} className="w-full mt-1 input-field"></textarea>
                     </div>
                      <div>
-                        <label htmlFor="required_organ" className="text-sm font-medium">Required Organ or Tissue <span className="text-red-500">*</span></label>
-                        <input id="required_organ" name="required_organ" type="text" required className="w-full mt-1 input-field" placeholder="e.g., Kidney, Liver" />
+                        <label className="text-sm font-medium">Required Organ or Tissue <span className="text-red-500">*</span></label>
+                        <div className="mt-2 space-y-2">
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Kidney" required className="mr-2" />
+                                <span>Kidney</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Liver" required className="mr-2" />
+                                <span>Liver</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Pancreas" required className="mr-2" />
+                                <span>Pancreas</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Intestine" required className="mr-2" />
+                                <span>Intestine</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Lung" required className="mr-2" />
+                                <span>Lung</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Corneas" required className="mr-2" />
+                                <span>Corneas</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Blood" required className="mr-2" />
+                                <span>Blood</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Platelets" required className="mr-2" />
+                                <span>Platelets</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Stem Cells" required className="mr-2" />
+                                <span>Stem Cells</span>
+                            </label>
+                            <label className="flex items-center">
+                                <input type="radio" name="required_organ" value="Bone Marrow" required className="mr-2" />
+                                <span>Bone Marrow</span>
+                            </label>
+                        </div>
                     </div>
                     
                     {error && <p className="text-sm text-center text-red-500">{error}</p>}
