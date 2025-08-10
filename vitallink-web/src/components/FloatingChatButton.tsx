@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/browser'
 import { Bot, MessageCircle, X, Send, CornerDownLeft } from 'lucide-react'
 import { askAI } from '@/app/chatbot/actions'
+import { useTheme } from 'next-themes'
 
 type Message = {
   role: 'user' | 'assistant';
@@ -12,6 +13,8 @@ type Message = {
 };
 
 export default function FloatingChatButton() {
+  const { theme } = useTheme()
+  const [mounted, setMounted] = useState(false)
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
@@ -20,6 +23,11 @@ export default function FloatingChatButton() {
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<null | HTMLDivElement>(null)
+
+  // Ensure component is mounted to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -83,16 +91,22 @@ export default function FloatingChatButton() {
     const result = await askAI(input)
 
     let assistantMessage: Message
-    if (result.error) {
+    if ('error' in result && result.error) {
       assistantMessage = { 
         role: 'assistant', 
         content: `I'm sorry, but I encountered an error: ${result.error}`, 
         timestamp: new Date() 
       }
-    } else {
+    } else if ('answer' in result) {
       assistantMessage = { 
         role: 'assistant', 
         content: result.answer || "I'm sorry, I couldn't generate a response.", 
+        timestamp: new Date() 
+      }
+    } else {
+      assistantMessage = { 
+        role: 'assistant', 
+        content: "I'm sorry, I couldn't generate a response.", 
         timestamp: new Date() 
       }
     }
@@ -101,41 +115,56 @@ export default function FloatingChatButton() {
     setIsTyping(false)
   }
 
-  // Don't show if not logged in or still loading
-  if (loading || !user) {
+  // Don't show if not logged in, still loading, or not mounted
+  if (!mounted || loading || !user) {
     return null
   }
+
+  const isDarkMode = theme === 'dark'
 
   return (
     <>
       {/* Chat Widget */}
       {isOpen && (
-        <div className={`fixed bottom-20 right-6 z-50 w-80 h-96 bg-card border border-border rounded-lg shadow-2xl transition-all duration-300 ${
-          isOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
-        }`}>
+        <div className={`fixed bottom-20 right-6 z-50 w-80 h-[500px] rounded-xl shadow-xl transition-all duration-300 flex flex-col overflow-hidden ${
+          isDarkMode 
+            ? 'bg-gray-900 border-gray-700' 
+            : 'bg-white border-gray-200'
+        } border`}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 bg-blue-600 text-white rounded-t-lg">
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white flex-shrink-0">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              <h3 className="font-semibold text-sm">VitalLink Assistant</h3>
+              <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">
+                <Bot className="h-4 w-4" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">VitalLink Assistant</h3>
+                <p className="text-xs text-blue-100">AI-powered health companion</p>
+              </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="hover:bg-blue-700 p-1 rounded transition-colors"
+              className="hover:bg-white/10 p-1.5 rounded-lg transition-colors"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 h-64 bg-background">
-            <div className="space-y-3">
+          <div className={`flex-1 overflow-y-auto ${
+            isDarkMode ? 'bg-gray-800' : 'bg-gray-50'
+          }`}>
+            <div className="p-4 space-y-4">
               {messages.map((msg, index) => (
                 <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs px-3 py-2 rounded-lg text-sm ${
+                  <div className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.role === 'user' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-muted text-foreground'
+                      ? 'bg-blue-600 text-white rounded-br-md shadow-sm' 
+                      : `${
+                          isDarkMode 
+                            ? 'bg-gray-700 text-gray-100 border-gray-600' 
+                            : 'bg-white text-gray-800 border-gray-200'
+                        } border rounded-bl-md shadow-sm`
                   }`}>
                     {msg.content}
                   </div>
@@ -143,11 +172,18 @@ export default function FloatingChatButton() {
               ))}
               {isTyping && (
                 <div className="flex justify-start">
-                  <div className="bg-muted px-3 py-2 rounded-lg text-sm text-foreground">
-                    <div className="flex space-x-1">
-                      <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce"></div>
-                      <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-1 h-1 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className={`px-4 py-2.5 rounded-2xl rounded-bl-md text-sm shadow-sm border ${
+                    isDarkMode 
+                      ? 'bg-gray-700 text-gray-400 border-gray-600' 
+                      : 'bg-white text-gray-500 border-gray-200'
+                  }`}>
+                    <div className="flex items-center space-x-1">
+                      <span className="text-xs">AI is typing</span>
+                      <div className="flex space-x-1 ml-2">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.4s'}}></div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -157,20 +193,30 @@ export default function FloatingChatButton() {
           </div>
 
           {/* Input */}
-          <div className="p-3 border-t border-border">
-            <form onSubmit={handleSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type a message..."
-                className="flex-1 px-3 py-2 text-sm border border-input rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-blue-500"
-                disabled={isTyping}
-              />
+          <div className={`p-4 border-t flex-shrink-0 ${
+            isDarkMode 
+              ? 'bg-gray-900 border-gray-700' 
+              : 'bg-white border-gray-200'
+          }`}>
+            <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask about your health profile..."
+                  className={`w-full px-4 py-2.5 text-sm border rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    isDarkMode 
+                      ? 'border-gray-600 bg-gray-800 text-gray-100 placeholder:text-gray-400' 
+                      : 'border-gray-300 bg-gray-50 text-gray-900 placeholder:text-gray-500'
+                  }`}
+                  disabled={isTyping}
+                />
+              </div>
               <button 
                 type="submit" 
                 disabled={isTyping || !input.trim()}
-                className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="p-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex-shrink-0 shadow-sm hover:shadow-md"
               >
                 <Send className="h-4 w-4" />
               </button>
@@ -180,25 +226,30 @@ export default function FloatingChatButton() {
       )}
 
       {/* Floating Button */}
-      <div className={`fixed bottom-6 right-6 z-50 transition-all duration-300 ${
-        isVisible ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0'
+      <div className={`fixed bottom-6 right-6 z-50 transition-all duration-500 ${
+        isVisible ? 'translate-y-0 opacity-100 scale-100' : 'translate-y-16 opacity-0 scale-95'
       }`}>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg transition-all duration-200 hover:bg-blue-700 hover:shadow-xl hover:scale-110"
-          title="AI Assistant"
+          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg transition-all duration-300 hover:from-blue-700 hover:to-blue-800 hover:shadow-xl hover:scale-110"
+          title="VitalLink AI Assistant"
         >
           {/* Button Icon */}
-          {isOpen ? (
-            <X className="h-6 w-6 transition-transform group-hover:scale-110" />
-          ) : (
-            <Bot className="h-6 w-6 transition-transform group-hover:scale-110" />
-          )}
+          <div className="relative z-10">
+            {isOpen ? (
+              <X className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+            ) : (
+              <Bot className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+            )}
+          </div>
           
           {/* Pulse Animation - only when closed */}
           {!isOpen && (
             <div className="absolute inset-0 rounded-full bg-blue-600 animate-ping opacity-20"></div>
           )}
+          
+          {/* Gradient overlay on hover */}
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-700 to-blue-800 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </button>
       </div>
     </>
