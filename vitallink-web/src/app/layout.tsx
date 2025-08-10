@@ -6,6 +6,7 @@ import "./globals.css";
 import NavbarWrapper from "@/components/NavbarWrapper";
 import Footer from "@/components/Footer";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import FloatingChatButton from "@/components/FloatingChatButton";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,6 +32,7 @@ export default function RootLayout({
           <NavbarWrapper />
           <main>{children}</main>
           <Footer />
+          <FloatingChatButton />
         </ThemeProvider>
       </body>
     </html>
