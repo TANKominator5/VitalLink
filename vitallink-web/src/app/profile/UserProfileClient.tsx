@@ -16,7 +16,14 @@ const ViewRow = ({ label, value }: { label: string; value: string | string[] | n
     );
 };
 
-const EditRow = ({ label, name, defaultValue, required = false, type = "text", children }: any) => (
+const EditRow = ({ label, name, defaultValue, required = false, type = "text", children }: {
+    label: string;
+    name: string;
+    defaultValue?: string | null;
+    required?: boolean;
+    type?: string;
+    children?: React.ReactNode;
+}) => (
     <div className="py-2">
         <label htmlFor={name} className="block text-sm font-medium text-muted-foreground">{label}{required && <span className="text-red-500">*</span>}</label>
         <div className="mt-1">
@@ -25,10 +32,29 @@ const EditRow = ({ label, name, defaultValue, required = false, type = "text", c
     </div>
 );
 
-export function UserProfileClient({ profile, details }: { profile: any, details: any | null }) {
+interface UserProfileClientProps {
+  initialProfile: {
+    id: string;
+    full_name?: string;
+    dob?: string;
+    blood_group?: string;
+    rh_factor?: string;
+    role?: string;
+    profile_complete?: boolean;
+  } | null;
+  details?: {
+    willing_to_donate?: string[];
+    hla_factor?: string;
+    diagnosed_with?: string;
+    required_organ?: string;
+  } | null;
+}
+
+export default function UserProfileClient({ initialProfile, details }: UserProfileClientProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const profile = initialProfile;
 
     // Safely initialize state, even if details is null
     const [selectedOrgans, setSelectedOrgans] = useState<string[]>(details?.willing_to_donate || []);

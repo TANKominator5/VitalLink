@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Heart, Users, CheckCircle, BrainCircuit, FileText, Gift, ShieldHalf, Scale, Eye } from 'lucide-react';
+import { Heart, Users, Gift, ShieldHalf, Scale, Eye } from 'lucide-react';
 
 // A reusable component for statistic cards to highlight key numbers
 const StatCard = ({ value, label, icon }: { value: string; label: string; icon: React.ReactNode }) => (
@@ -74,7 +74,7 @@ export default function AboutDonationPage() {
             <section id="who-can-donate" className="mb-20 p-8 bg-secondary/50 rounded-lg border border-border">
                 <h2 className="text-3xl font-bold text-center mb-6 text-foreground">You Have the Potential to Be a Hero</h2>
                 <p className="text-center max-w-3xl mx-auto text-muted-foreground">
-                    People of all ages and medical histories can be potential donors. Your decision to register is the first step. The final determination of which organs and tissues are suitable for transplantation is made by medical experts at the time of donation. Don't rule yourself out.
+                    People of all ages and medical histories can be potential donors. Your decision to register is the first step. The final determination of which organs and tissues are suitable for transplantation is made by medical experts at the time of donation. Don&apos;t rule yourself out.
                 </p>
                 <div className="flex justify-center mt-6">
                     <Link href="/signup" className="bg-blue-600 text-white px-8 py-3 rounded-full font-semibold text-lg hover:bg-blue-700 transition-transform hover:scale-105">

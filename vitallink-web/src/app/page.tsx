@@ -88,7 +88,7 @@ export default function HomePage() {
             </p>
           </div>
           <FaqItem question="How does the platform verify my medical data with ABHA?">
-            <p>During registration, we'll guide you through a secure, consent-based process using the official ABHA framework. You grant one-time access for our system to retrieve your health records. Our AI then performs a preliminary fitness check, which is always validated by a medical professional. Your data is never stored without permission.</p>
+            <p>During registration, we&apos;ll guide you through a secure, consent-based process using the official ABHA framework. You grant one-time access for our system to retrieve your health records. Our AI then performs a preliminary fitness check, which is always validated by a medical professional. Your data is never stored without permission.</p>
           </FaqItem>
           <FaqItem question="Is my personal data safe and secure on this platform?">
             <p>Absolutely. We use end-to-end encryption for all data. Your consent is recorded as a cryptographic hash on a secure blockchain, making it tamper-proof and verifiable without exposing your private information. We adhere to the strictest data privacy standards.</p>

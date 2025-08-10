@@ -34,13 +34,13 @@ export default function ChatbotPage() {
     const result = await askAI(input);
 
     let assistantMessage: Message;
-    if (result.error) {
+      if ('error' in result && result.error) {
         assistantMessage = { role: 'assistant', content: `Error: ${result.error}` };
-    } else {
+      } else if ('answer' in result) {
         assistantMessage = { role: 'assistant', content: result.answer || "No response found." };
-    }
-    
-    setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        assistantMessage = { role: 'assistant', content: "No response found." };
+      }    setMessages(prev => [...prev, assistantMessage]);
     setIsLoading(false);
   };
 
@@ -49,7 +49,7 @@ export default function ChatbotPage() {
       <header className="text-center mb-6">
         <h1 className="text-4xl font-extrabold tracking-tight text-foreground">AI Profile Assistant</h1>
         <p className="mt-2 text-muted-foreground">Ask questions about your profile information.</p>
-        <p className="mt-1 text-xs text-muted-foreground">Examples: "What organs am I willing to donate?" or "What is my blood type?"</p>
+        <p className="mt-1 text-xs text-muted-foreground">Examples: &ldquo;What organs am I willing to donate?&rdquo; or &ldquo;What is my blood type?&rdquo;</p>
       </header>
       
       <div className="flex-grow overflow-y-auto bg-card border border-border rounded-lg p-4 space-y-4">

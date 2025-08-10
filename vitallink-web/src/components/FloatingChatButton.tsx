@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/browser'
-import { Bot, MessageCircle, X, Send, CornerDownLeft } from 'lucide-react'
+import { Bot, X, Send } from 'lucide-react'
 import { askAI } from '@/app/chatbot/actions'
 import { useTheme } from 'next-themes'
 
@@ -13,10 +13,16 @@ type Message = {
   timestamp: Date;
 };
 
+interface User {
+  id: string;
+  email?: string;
+  user_metadata?: Record<string, unknown>;
+}
+
 export default function FloatingChatButton() {
   const { theme } = useTheme()
   const [mounted, setMounted] = useState(false)
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
   const [isOpen, setIsOpen] = useState(false)

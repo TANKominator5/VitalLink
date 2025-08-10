@@ -41,7 +41,7 @@ export async function updateProfile(formData: FormData) {
   }
 
   // 4. Update the role-specific details table
-  let roleSpecificError: any = null;
+  let roleSpecificError: { message?: string } | null = null;
 
   if (role === 'donor') {
     const donorSpecificData = {

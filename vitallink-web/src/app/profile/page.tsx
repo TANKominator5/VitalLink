@@ -1,7 +1,7 @@
 // src/app/profile/page.tsx
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { UserProfileClient } from "./UserProfileClient"; // We will create this next
+import UserProfileClient from "./UserProfileClient";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -55,7 +55,7 @@ export default async function ProfilePage() {
           </p>
         </header>
       {/* We pass all the fetched data to the client component */}
-      <UserProfileClient profile={profile} details={details} />
+      <UserProfileClient initialProfile={profile} details={details} />
     </div>
   );
 }
