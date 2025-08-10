@@ -25,29 +25,31 @@ export default function RecipientSetupPage() {
             return;
         }
 
-        // CORRECTED DATA OBJECT FOR 'profiles' TABLE
-        // Using upsert to create or update the profile
+        // Data for the 'profiles' table
         const commonProfileData = {
-            id: user.id, // Include the user ID for upsert
+            id: user.id,
+            email: user.email,
+            role: 'recipient',
             full_name: formData.get('full_name') as string,
             dob: formData.get('dob') as string,
             blood_group: formData.get('blood_group') as string,
             rh_factor: formData.get('rh_factor') as string,
-            role: 'recipient', // Ensure role is set
             profile_complete: true,
         };
 
+        // Data for the 'recipient_details' table
         const recipientSpecificData = {
-            user_id: user.id, // Include the user ID for upsert
+            user_id: user.id,
             diagnosed_with: formData.get('diagnosed_with') as string,
             required_organ: formData.get('required_organ') as string,
         };
 
-        // Use upsert to create or update records
+        // Upsert the 'profiles' table
         const { error: profileError } = await supabase
             .from('profiles')
             .upsert(commonProfileData, { onConflict: 'id' });
 
+        // Upsert the 'recipient_details' table
         const { error: recipientError } = await supabase
             .from('recipient_details')
             .upsert(recipientSpecificData, { onConflict: 'user_id' });
@@ -55,8 +57,8 @@ export default function RecipientSetupPage() {
         if (profileError || recipientError) {
             setError(profileError?.message || recipientError?.message || "An unknown error occurred.");
         } else {
-            router.push('/dashboard');
-            router.refresh(); // Force a refresh to get new server-side props
+            // On success, redirect to the new organ details page
+            router.push('/organ-details');
         }
 
         setIsLoading(false);
@@ -67,10 +69,9 @@ export default function RecipientSetupPage() {
             <div className="w-full max-w-lg p-8 space-y-6 bg-card text-card-foreground border border-border rounded-lg shadow-md">
                 <div className="text-center">
                     <h1 className="text-3xl font-bold">Complete Your Recipient Profile</h1>
-                    <p className="text-muted-foreground">to continue to VitalLink</p>
+                    <p className="text-muted-foreground">Step 1 of 2: Basic Information</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* The form JSX remains the same */}
                     <div>
                         <label htmlFor="full_name" className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                         <input id="full_name" name="full_name" type="text" required className="w-full mt-1 input-field" />
@@ -99,45 +100,45 @@ export default function RecipientSetupPage() {
                     </div>
                      <div>
                         <label className="text-sm font-medium">Required Organ or Tissue <span className="text-red-500">*</span></label>
-                        <div className="mt-2 space-y-2">
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Kidney" required className="mr-2" />
+                        <div className="grid grid-cols-2 gap-2 mt-2 p-4 border border-input rounded-md">
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="kidney" required className="rounded" />
                                 <span>Kidney</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Liver" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="liver" required className="rounded" />
                                 <span>Liver</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Pancreas" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="pancreas" required className="rounded" />
                                 <span>Pancreas</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Intestine" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="intestine" required className="rounded" />
                                 <span>Intestine</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Lung" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="lung" required className="rounded" />
                                 <span>Lung</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Corneas" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="corneas" required className="rounded" />
                                 <span>Corneas</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Blood" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="blood" required className="rounded" />
                                 <span>Blood</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Platelets" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="platelets" required className="rounded" />
                                 <span>Platelets</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Stem Cells" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="stem cells" required className="rounded" />
                                 <span>Stem Cells</span>
                             </label>
-                            <label className="flex items-center">
-                                <input type="radio" name="required_organ" value="Bone Marrow" required className="mr-2" />
+                            <label className="flex items-center space-x-2">
+                                <input type="radio" name="required_organ" value="bone marrow" required className="rounded" />
                                 <span>Bone Marrow</span>
                             </label>
                         </div>
@@ -146,7 +147,7 @@ export default function RecipientSetupPage() {
                     {error && <p className="text-sm text-center text-red-500">{error}</p>}
 
                     <button type="submit" disabled={isLoading} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                        {isLoading ? 'Saving...' : 'Complete Profile'}
+                        {isLoading ? 'Saving...' : 'Continue to Step 2'}
                     </button>
                 </form>
             </div>

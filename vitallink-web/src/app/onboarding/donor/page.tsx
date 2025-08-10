@@ -37,30 +37,32 @@ export default function DonorSetupPage() {
             return;
         }
 
-        // CORRECTED DATA OBJECT FOR 'profiles' TABLE
-        // Using upsert to create or update the profile
+        // Data for the 'profiles' table
         const commonProfileData = {
-            id: user.id, // Include the user ID for upsert
+            id: user.id,
+            email: user.email,
+            role: 'donor',
             full_name: formData.get('full_name') as string,
             dob: formData.get('dob') as string,
             blood_group: formData.get('blood_group') as string,
             rh_factor: formData.get('rh_factor') as string,
-            role: 'donor', // Ensure role is set
-            profile_complete: true, // Mark profile as complete
+            profile_complete: true, // Mark this onboarding step as complete
         };
         
+        // Data for the 'donor_details' table
         const donorSpecificData = {
-            user_id: user.id, // Include the user ID for upsert
+            user_id: user.id,
             hla_factor: formData.get('hla_factor') as string,
             diagnosed_with: formData.get('diagnosed_with') as string,
             willing_to_donate: selectedOrgans,
         };
 
-        // Use upsert to create or update records
+        // Upsert the 'profiles' table
         const { error: profileError } = await supabase
             .from('profiles')
             .upsert(commonProfileData, { onConflict: 'id' });
         
+        // Upsert the 'donor_details' table
         const { error: donorError } = await supabase
             .from('donor_details')
             .upsert(donorSpecificData, { onConflict: 'user_id' });
@@ -68,8 +70,8 @@ export default function DonorSetupPage() {
         if (profileError || donorError) {
             setError(profileError?.message || donorError?.message || "An unknown error occurred.");
         } else {
-            router.push('/dashboard'); // Redirect to dashboard on success
-            router.refresh(); // Force a refresh to get new server-side props
+            // On success, redirect to the new organ details page
+            router.push('/organ-details'); 
         }
 
         setIsLoading(false);
@@ -80,10 +82,9 @@ export default function DonorSetupPage() {
             <div className="w-full max-w-lg p-8 space-y-6 bg-card text-card-foreground border border-border rounded-lg shadow-md">
                 <div className="text-center">
                     <h1 className="text-3xl font-bold">Complete Your Donor Profile</h1>
-                    <p className="text-muted-foreground">to continue to VitalLink</p>
+                    <p className="text-muted-foreground">Step 1 of 2: Basic Information</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* The form JSX remains the same */}
                     <div>
                         <label htmlFor="full_name" className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                         <input id="full_name" name="full_name" type="text" required className="w-full mt-1 input-field" />
@@ -129,7 +130,7 @@ export default function DonorSetupPage() {
                     {error && <p className="text-sm text-center text-red-500">{error}</p>}
 
                     <button type="submit" disabled={isLoading} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                        {isLoading ? 'Saving...' : 'Complete Profile'}
+                        {isLoading ? 'Saving...' : 'Continue to Step 2'}
                     </button>
                 </form>
             </div>

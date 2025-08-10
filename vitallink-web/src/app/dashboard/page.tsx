@@ -7,38 +7,40 @@ import { User, ShieldCheck } from "lucide-react";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  // 1. Get user session
+  // 1. Get user session, redirect to login if not found
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return redirect('/login');
   }
 
-  // 2. Try to fetch the user's profile
+  // 2. Try to fetch the user's profile from the 'profiles' table
   let { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single();
 
-  // 3. **NEW LOGIC:** If no profile exists, create it.
+  // 3. LOGIC FOR NEW USERS: If no profile exists, create it
   if (!profile) {
     console.log("No profile found for user, creating one...");
 
     const userRole = user.user_metadata?.role;
     if (!userRole) {
-      // If for some reason the role is missing, sign out and show an error
+      // If role is missing, it's a critical error. Sign out and redirect.
       await supabase.auth.signOut();
       return redirect('/login?error=user_role_not_found');
     }
 
-    // Create the main profile record
+    // Prepare the new profile record
     const profileData = {
       id: user.id, 
       role: userRole,
-      // For medical professionals, mark profile as complete since they don't have onboarding
-      profile_complete: userRole === 'medical_professional'
+      // Medical professionals skip the multi-step onboarding, so their profile is complete by default.
+      profile_complete: userRole === 'medical_professional',
+      organ_details_complete: userRole === 'medical_professional',
     };
     
+    // Insert the new profile record
     const { data: newProfile, error: profileInsertError } = await supabase
       .from('profiles')
       .insert(profileData)
@@ -51,7 +53,7 @@ export default async function DashboardPage() {
       return redirect('/login?error=profile_creation_failed');
     }
     
-    // Now create the role-specific details record
+    // Create the corresponding role-specific details record (if applicable)
     if (userRole === 'donor') {
       const { error: donorInsertError } = await supabase
         .from('donor_details')
@@ -59,7 +61,6 @@ export default async function DashboardPage() {
         
       if (donorInsertError) {
          console.error("Error creating donor details:", donorInsertError);
-         // Handle cleanup if necessary
       }
     } else if (userRole === 'recipient') {
       const { error: recipientInsertError } = await supabase
@@ -68,31 +69,30 @@ export default async function DashboardPage() {
       
       if (recipientInsertError) {
          console.error("Error creating recipient details:", recipientInsertError);
-         // Handle cleanup if necessary
       }
     }
     
-    // After creating, assign the newProfile to the profile variable
+    // Use the newly created profile for subsequent checks
     profile = newProfile;
-    
-    // For donors and recipients, redirect to onboarding
-    // Medical professionals can continue to dashboard
-    if (userRole === 'donor' || userRole === 'recipient') {
-      return redirect('/onboarding/' + userRole);
-    }
   }
 
-  // 4. If profile exists, check if it's complete (original logic)
+  // 4. CHECKPOINT 1: Check if initial onboarding is complete
   if (!profile.profile_complete) {
     const role = profile.role;
-    
     if (role === 'donor' || role === 'recipient') {
       return redirect(`/onboarding/${role}`);
     }
-    // Medical professionals or others without specific onboarding can pass
+  }
+  
+  // 5. CHECKPOINT 2: Check if organ details step is complete
+  if (!profile.organ_details_complete) {
+      const role = profile.role;
+      if (role === 'donor' || role === 'recipient') {
+          return redirect('/organ-details');
+      }
   }
 
-  // 5. If profile is complete, render the dashboard
+  // 6. RENDER DASHBOARD (Happy Path): If all checks pass, show the main dashboard
   return (
     <div className="container mx-auto px-4 py-12">
       <header className="mb-8">
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
                 <h3 className="font-semibold">Profile Complete & Verified</h3>
             </div>
             <p className="text-muted-foreground mt-2">
-              Thank you for providing your details. Your account is active.
+              Thank you for providing your details. Your account is active and ready.
             </p>
         </div>
       </div>

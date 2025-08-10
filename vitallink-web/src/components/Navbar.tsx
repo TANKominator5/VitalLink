@@ -34,6 +34,7 @@ const Navbar = ({ userRole }: NavbarProps) => {
               <>
                 <Link href="/dashboard" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Dashboard</Link>
                 <Link href="/profile" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">My Profile</Link>
+                <Link href="/matching" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Find Matches</Link>
                 <Link href="/health-records" className="text-muted-foreground transition-all duration-200 hover:text-foreground hover:scale-105">Health Records</Link>
               </>
             )}
