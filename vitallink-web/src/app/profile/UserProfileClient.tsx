@@ -56,6 +56,15 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
     const [success, setSuccess] = useState<string | null>(null);
     const profile = initialProfile;
 
+    // Early return if profile is null
+    if (!profile) {
+        return (
+            <div className="bg-card border border-border rounded-lg shadow-sm p-6">
+                <p className="text-center text-muted-foreground">Profile not found.</p>
+            </div>
+        );
+    }
+
     // Safely initialize state, even if details is null
     const [selectedOrgans, setSelectedOrgans] = useState<string[]>(details?.willing_to_donate || []);
     
@@ -75,7 +84,7 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
         const result = await updateProfile(formData);
 
         if (result?.error) {
-            setError(result.error.message);
+            setError(result.error.message || "An error occurred while updating your profile.");
             setSuccess(null);
         } else {
             setSuccess("Profile updated successfully!");
@@ -91,8 +100,8 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
                 <h3 className="text-lg font-semibold leading-6 text-foreground">Profile Information</h3>
                 <div className="mt-4 border-t border-border">
                     <dl className="divide-y divide-border">
-                        <ViewRow label="Full Name" value={profile.full_name} />
-                        <ViewRow label="Role" value={profile.role} />
+                        <ViewRow label="Full Name" value={profile?.full_name} />
+                        <ViewRow label="Role" value={profile?.role} />
                         <ViewRow label="Account Status" value="Verified" />
                     </dl>
                     <p className="mt-4 text-sm text-muted-foreground">This role does not require additional profile details.</p>
@@ -129,17 +138,17 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
                                    profile?.role === 'recipient' ? 'Organ Recipient' : 
                                    'User'} 
                         />
-                        <ViewRow label="Full Name" value={profile.full_name} />
-                        <ViewRow label="Date of Birth" value={profile.dob} />
-                        <ViewRow label="Blood Group" value={profile.blood_group} />
-                        <ViewRow label="Rh Factor" value={profile.rh_factor} />
+                        <ViewRow label="Full Name" value={profile?.full_name} />
+                        <ViewRow label="Date of Birth" value={profile?.dob} />
+                        <ViewRow label="Blood Group" value={profile?.blood_group} />
+                        <ViewRow label="Rh Factor" value={profile?.rh_factor} />
                         {/* Safely access details properties */}
                         <ViewRow label="Currently Diagnosed With" value={details?.diagnosed_with} />
-                        {profile.role === 'donor' && <>
+                        {profile?.role === 'donor' && <>
                             <ViewRow label="HLA Factor" value={details?.hla_factor} />
                             <ViewRow label="Willing to Donate" value={details?.willing_to_donate} />
                         </>}
-                        {profile.role === 'recipient' && <ViewRow label="Required Organ" value={details?.required_organ} />}
+                        {profile?.role === 'recipient' && <ViewRow label="Required Organ" value={details?.required_organ} />}
                     </dl>
                 </div>
             </div>
@@ -150,19 +159,19 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
     return (
         <div className="bg-card border border-border rounded-lg shadow-sm p-6">
             <form onSubmit={handleFormSubmit}>
-                <input type="hidden" name="role" value={profile.role} />
+                <input type="hidden" name="role" value={profile?.role || ''} />
                 <h3 className="text-lg font-semibold leading-6 text-foreground mb-4">Edit Profile Information</h3>
                 
                 <div className="space-y-4">
-                    <EditRow label="Full Name" name="full_name" defaultValue={profile.full_name} required />
-                    <EditRow label="Date of Birth" name="dob" defaultValue={profile.dob} type="date" required />
-                    <EditRow label="Blood Group" name="blood_group" defaultValue={profile.blood_group} required>
-                        <select name="blood_group" id="blood_group" defaultValue={profile.blood_group} className="w-full input-field">
+                    <EditRow label="Full Name" name="full_name" defaultValue={profile?.full_name} required />
+                    <EditRow label="Date of Birth" name="dob" defaultValue={profile?.dob} type="date" required />
+                    <EditRow label="Blood Group" name="blood_group" defaultValue={profile?.blood_group} required>
+                        <select name="blood_group" id="blood_group" defaultValue={profile?.blood_group || ''} className="w-full input-field">
                             <option value="A">A</option><option value="B">B</option><option value="AB">AB</option><option value="O">O</option>
                         </select>
                     </EditRow>
-                    <EditRow label="Rh Factor" name="rh_factor" defaultValue={profile.rh_factor} required>
-                         <select name="rh_factor" id="rh_factor" defaultValue={profile.rh_factor} className="w-full input-field">
+                    <EditRow label="Rh Factor" name="rh_factor" defaultValue={profile?.rh_factor} required>
+                         <select name="rh_factor" id="rh_factor" defaultValue={profile?.rh_factor || ''} className="w-full input-field">
                             <option value="Positive">Positive (+)</option><option value="Negative">Negative (-)</option>
                         </select>
                     </EditRow>
@@ -171,7 +180,7 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
                         <textarea name="diagnosed_with" id="diagnosed_with" defaultValue={details?.diagnosed_with || ''} rows={3} className="w-full input-field" />
                      </EditRow>
 
-                    {profile.role === 'donor' && <>
+                    {profile?.role === 'donor' && <>
                         <EditRow label="HLA Factor" name="hla_factor" defaultValue={details?.hla_factor} />
                         <div className="py-2">
                             <label className="block text-sm font-medium text-muted-foreground">Willing to Donate</label>
@@ -186,7 +195,7 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
                         </div>
                     </>}
 
-                    {profile.role === 'recipient' && <EditRow label="Required Organ" name="required_organ" defaultValue={details?.required_organ} required />}
+                    {profile?.role === 'recipient' && <EditRow label="Required Organ" name="required_organ" defaultValue={details?.required_organ} required />}
                 </div>
 
                 {error && <p className="mt-4 text-sm text-center text-red-500">{error}</p>}
