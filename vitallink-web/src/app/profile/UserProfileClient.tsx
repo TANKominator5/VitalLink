@@ -79,13 +79,30 @@ export function UserProfileClient({ profile, details }: { profile: any, details:
     if (!isEditing) {
         return (
             <div className="bg-card border border-border rounded-lg shadow-sm p-6">
-                <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-semibold leading-6 text-foreground">Profile Information</h3>
+                <div className="flex justify-between items-start">
+                    <div>
+                        <h3 className="text-lg font-semibold leading-6 text-foreground">Profile Information</h3>
+                        <div className="mt-2">
+                            <span className="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                {profile?.role === 'medical_professional' ? 'Medical Professional' : 
+                                 profile?.role === 'donor' ? 'Organ Donor' : 
+                                 profile?.role === 'recipient' ? 'Organ Recipient' : 
+                                 'User'}
+                            </span>
+                        </div>
+                    </div>
                     <button onClick={() => setIsEditing(true)} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">Edit Profile</button>
                 </div>
                 {success && <p className="mt-4 text-sm text-center text-green-500">{success}</p>}
                 <div className="mt-4 border-t border-border">
                     <dl className="divide-y divide-border">
+                        <ViewRow 
+                            label="Account Type" 
+                            value={profile?.role === 'medical_professional' ? 'Medical Professional' : 
+                                   profile?.role === 'donor' ? 'Organ Donor' : 
+                                   profile?.role === 'recipient' ? 'Organ Recipient' : 
+                                   'User'} 
+                        />
                         <ViewRow label="Full Name" value={profile.full_name} />
                         <ViewRow label="Date of Birth" value={profile.dob} />
                         <ViewRow label="Blood Group" value={profile.blood_group} />
