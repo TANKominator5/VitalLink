@@ -7,37 +7,92 @@ import { User, ShieldCheck } from "lucide-react";
 export default async function DashboardPage() {
   const supabase = createClient();
 
-  // Get user session
+  // 1. Get user session
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
     return redirect('/login');
   }
 
-  // Get user's profile from the 'profiles' table
-  const { data: profile } = await supabase
+  // 2. Try to fetch the user's profile
+  let { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
-    .single(); // .single() assumes one-to-one relationship and returns a single object
+    .single();
 
-  // If there's no profile or it's not complete, redirect to the correct setup page
-  if (!profile || !profile.profile_complete) {
-    const role = profile?.role || user.user_metadata?.role;
+  // 3. **NEW LOGIC:** If no profile exists, create it.
+  if (!profile) {
+    console.log("No profile found for user, creating one...");
+
+    const userRole = user.user_metadata?.role;
+    if (!userRole) {
+      // If for some reason the role is missing, sign out and show an error
+      await supabase.auth.signOut();
+      return redirect('/login?error=user_role_not_found');
+    }
+
+    // Create the main profile record
+    const profileData = {
+      id: user.id, 
+      role: userRole,
+      // For medical professionals, mark profile as complete since they don't have onboarding
+      profile_complete: userRole === 'medical_professional'
+    };
     
-    if (role === 'donor') {
-      return redirect('/onboarding/donor');
-    } else if (role === 'recipient') {
-      return redirect('/onboarding/recipient');
-    } else if (role === 'medical_professional') {
-      // You can create a setup page for medical professionals later
-      // For now, we'll just let them pass
-    } else {
-       // Handle cases where role is not set or is unexpected
-       return redirect('/login?error=invalid_role');
+    const { data: newProfile, error: profileInsertError } = await supabase
+      .from('profiles')
+      .insert(profileData)
+      .select()
+      .single();
+
+    if (profileInsertError) {
+      console.error("Error creating profile:", profileInsertError);
+      await supabase.auth.signOut();
+      return redirect('/login?error=profile_creation_failed');
+    }
+    
+    // Now create the role-specific details record
+    if (userRole === 'donor') {
+      const { error: donorInsertError } = await supabase
+        .from('donor_details')
+        .insert({ user_id: user.id });
+        
+      if (donorInsertError) {
+         console.error("Error creating donor details:", donorInsertError);
+         // Handle cleanup if necessary
+      }
+    } else if (userRole === 'recipient') {
+      const { error: recipientInsertError } = await supabase
+        .from('recipient_details')
+        .insert({ user_id: user.id });
+      
+      if (recipientInsertError) {
+         console.error("Error creating recipient details:", recipientInsertError);
+         // Handle cleanup if necessary
+      }
+    }
+    
+    // After creating, assign the newProfile to the profile variable
+    profile = newProfile;
+    
+    // For donors and recipients, redirect to onboarding
+    // Medical professionals can continue to dashboard
+    if (userRole === 'donor' || userRole === 'recipient') {
+      return redirect('/onboarding/' + userRole);
     }
   }
 
-  // If profile is complete, render the dashboard:
+  // 4. If profile exists, check if it's complete (original logic)
+  if (!profile.profile_complete) {
+    const role = profile.role;
+    
+    if (role === 'donor' || role === 'recipient') {
+      return redirect(`/onboarding/${role}`);
+    }
+    // Medical professionals or others without specific onboarding can pass
+  }
+
+  // 5. If profile is complete, render the dashboard
   return (
     <div className="container mx-auto px-4 py-12">
       <header className="mb-8">

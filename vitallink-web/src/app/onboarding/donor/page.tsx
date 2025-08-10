@@ -32,43 +32,46 @@ export default function DonorSetupPage() {
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            setError("You must be logged in.");
+            setError("You must be logged in to submit this form.");
             setIsLoading(false);
             return;
         }
 
-        // Data for the 'profiles' table
+        // CORRECTED DATA OBJECT FOR 'profiles' TABLE
+        // Using upsert to create or update the profile
         const commonProfileData = {
+            id: user.id, // Include the user ID for upsert
             full_name: formData.get('full_name') as string,
             dob: formData.get('dob') as string,
             blood_group: formData.get('blood_group') as string,
             rh_factor: formData.get('rh_factor') as string,
-            profile_complete: true,
+            role: 'donor', // Ensure role is set
+            profile_complete: true, // Mark profile as complete
         };
         
-        // Data for the 'donor_details' table
         const donorSpecificData = {
+            user_id: user.id, // Include the user ID for upsert
             hla_factor: formData.get('hla_factor') as string,
             diagnosed_with: formData.get('diagnosed_with') as string,
             willing_to_donate: selectedOrgans,
         };
 
-        // Transaction: Update both tables
+        // Use upsert to create or update records
         const { error: profileError } = await supabase
             .from('profiles')
-            .update(commonProfileData)
-            .eq('id', user.id);
-
+            .upsert(commonProfileData, { onConflict: 'id' });
+        
         const { error: donorError } = await supabase
             .from('donor_details')
-            .update(donorSpecificData)
-            .eq('user_id', user.id);
-
+            .upsert(donorSpecificData, { onConflict: 'user_id' });
+        
         if (profileError || donorError) {
             setError(profileError?.message || donorError?.message || "An unknown error occurred.");
         } else {
-            router.push('/dashboard');
+            router.push('/dashboard'); // Redirect to dashboard on success
+            router.refresh(); // Force a refresh to get new server-side props
         }
+
         setIsLoading(false);
     };
 
@@ -79,9 +82,8 @@ export default function DonorSetupPage() {
                     <h1 className="text-3xl font-bold">Complete Your Donor Profile</h1>
                     <p className="text-muted-foreground">to continue to VitalLink</p>
                 </div>
-
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* The form fields remain the same */}
+                    {/* The form JSX remains the same */}
                     <div>
                         <label htmlFor="full_name" className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                         <input id="full_name" name="full_name" type="text" required className="w-full mt-1 input-field" />

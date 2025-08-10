@@ -2,37 +2,35 @@
 "use client";
 
 import { useState } from "react";
-import { updateProfile } from "./actions"; // Import the server action
+import { updateProfile } from "./actions";
 
-// Helper component for displaying a row of data
 const ViewRow = ({ label, value }: { label: string; value: string | string[] | null | undefined }) => {
-    if (!value) return null;
+    // Only render the row if there is a value to display
+    if (!value || (Array.isArray(value) && value.length === 0)) return null;
     const displayValue = Array.isArray(value) ? value.join(', ') : value;
     return (
         <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
             <dt className="text-sm font-medium text-muted-foreground">{label}</dt>
-            <dd className="mt-1 text-sm text-foreground sm:mt-0 sm:col-span-2 capitalize">{displayValue || 'Not provided'}</dd>
+            <dd className="mt-1 text-sm text-foreground sm:mt-0 sm:col-span-2 capitalize">{displayValue}</dd>
         </div>
     );
 };
 
-// Helper component for an input field in the form
 const EditRow = ({ label, name, defaultValue, required = false, type = "text", children }: any) => (
     <div className="py-2">
         <label htmlFor={name} className="block text-sm font-medium text-muted-foreground">{label}{required && <span className="text-red-500">*</span>}</label>
         <div className="mt-1">
-            {children || <input type={type} name={name} id={name} defaultValue={defaultValue} required={required} className="w-full input-field" />}
+            {children || <input type={type} name={name} id={name} defaultValue={defaultValue || ''} required={required} className="w-full input-field" />}
         </div>
     </div>
 );
 
-// Main client component
-export function UserProfileClient({ profile, details }: { profile: any, details: any }) {
+export function UserProfileClient({ profile, details }: { profile: any, details: any | null }) {
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
 
-    // State for the checkboxes in edit mode
+    // Safely initialize state, even if details is null
     const [selectedOrgans, setSelectedOrgans] = useState<string[]>(details?.willing_to_donate || []);
     
     const handleCheckboxChange = (organ: string) => {
@@ -47,9 +45,7 @@ export function UserProfileClient({ profile, details }: { profile: any, details:
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
         
-        // Append checkbox data to formData before submitting
         selectedOrgans.forEach(organ => formData.append('willing_to_donate', organ));
-
         const result = await updateProfile(formData);
 
         if (result?.error) {
@@ -58,10 +54,28 @@ export function UserProfileClient({ profile, details }: { profile: any, details:
         } else {
             setSuccess("Profile updated successfully!");
             setError(null);
-            setIsEditing(false); // Exit edit mode on success
+            setIsEditing(false);
         }
     };
 
+    // If a user has a role with no details (like medical_professional), show a simplified view.
+    if (!details && profile.role !== 'donor' && profile.role !== 'recipient') {
+         return (
+            <div className="bg-card border border-border rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold leading-6 text-foreground">Profile Information</h3>
+                <div className="mt-4 border-t border-border">
+                    <dl className="divide-y divide-border">
+                        <ViewRow label="Full Name" value={profile.full_name} />
+                        <ViewRow label="Role" value={profile.role} />
+                        <ViewRow label="Account Status" value="Verified" />
+                    </dl>
+                    <p className="mt-4 text-sm text-muted-foreground">This role does not require additional profile details.</p>
+                </div>
+            </div>
+        );
+    }
+
+    // --- VIEW MODE ---
     if (!isEditing) {
         return (
             <div className="bg-card border border-border rounded-lg shadow-sm p-6">
@@ -76,18 +90,20 @@ export function UserProfileClient({ profile, details }: { profile: any, details:
                         <ViewRow label="Date of Birth" value={profile.dob} />
                         <ViewRow label="Blood Group" value={profile.blood_group} />
                         <ViewRow label="Rh Factor" value={profile.rh_factor} />
-                        <ViewRow label="Currently Diagnosed With" value={details.diagnosed_with} />
+                        {/* Safely access details properties */}
+                        <ViewRow label="Currently Diagnosed With" value={details?.diagnosed_with} />
                         {profile.role === 'donor' && <>
-                            <ViewRow label="HLA Factor" value={details.hla_factor} />
-                            <ViewRow label="Willing to Donate" value={details.willing_to_donate} />
+                            <ViewRow label="HLA Factor" value={details?.hla_factor} />
+                            <ViewRow label="Willing to Donate" value={details?.willing_to_donate} />
                         </>}
-                        {profile.role === 'recipient' && <ViewRow label="Required Organ" value={details.required_organ} />}
+                        {profile.role === 'recipient' && <ViewRow label="Required Organ" value={details?.required_organ} />}
                     </dl>
                 </div>
             </div>
         );
     }
 
+    // --- EDIT MODE ---
     return (
         <div className="bg-card border border-border rounded-lg shadow-sm p-6">
             <form onSubmit={handleFormSubmit}>
@@ -107,12 +123,13 @@ export function UserProfileClient({ profile, details }: { profile: any, details:
                             <option value="Positive">Positive (+)</option><option value="Negative">Negative (-)</option>
                         </select>
                     </EditRow>
-                     <EditRow label="Currently Diagnosed With" name="diagnosed_with" defaultValue={details.diagnosed_with}>
-                        <textarea name="diagnosed_with" id="diagnosed_with" defaultValue={details.diagnosed_with} rows={3} className="w-full input-field" />
+                     {/* Safely access details properties for defaultValues */}
+                     <EditRow label="Currently Diagnosed With" name="diagnosed_with" defaultValue={details?.diagnosed_with}>
+                        <textarea name="diagnosed_with" id="diagnosed_with" defaultValue={details?.diagnosed_with || ''} rows={3} className="w-full input-field" />
                      </EditRow>
 
                     {profile.role === 'donor' && <>
-                        <EditRow label="HLA Factor" name="hla_factor" defaultValue={details.hla_factor} />
+                        <EditRow label="HLA Factor" name="hla_factor" defaultValue={details?.hla_factor} />
                         <div className="py-2">
                             <label className="block text-sm font-medium text-muted-foreground">Willing to Donate</label>
                             <div className="grid grid-cols-2 gap-2 mt-2 p-4 border border-input rounded-md">
@@ -126,7 +143,7 @@ export function UserProfileClient({ profile, details }: { profile: any, details:
                         </div>
                     </>}
 
-                    {profile.role === 'recipient' && <EditRow label="Required Organ" name="required_organ" defaultValue={details.required_organ} required />}
+                    {profile.role === 'recipient' && <EditRow label="Required Organ" name="required_organ" defaultValue={details?.required_organ} required />}
                 </div>
 
                 {error && <p className="mt-4 text-sm text-center text-red-500">{error}</p>}
