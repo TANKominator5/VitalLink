@@ -9,39 +9,54 @@ export default function RecipientSetupPage() {
     const router = useRouter();
     const supabase = createClient();
     const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setError(null);
+        setIsLoading(true);
 
         const formData = new FormData(event.currentTarget);
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            setError("You must be logged in to submit this form.");
+            setError("You must be logged in.");
+            setIsLoading(false);
             return;
         }
 
-        const profileData = {
-            id: user.id,
+        // Data for the 'profiles' table
+        const commonProfileData = {
             full_name: formData.get('full_name') as string,
             dob: formData.get('dob') as string,
             blood_group: formData.get('blood_group') as string,
-            diagnosed_with: formData.get('diagnosed_with') as string,
-            required_organ: formData.get('required_organ') as string,
+            rh_factor: formData.get('rh_factor') as string, // Added Rh Factor
             profile_complete: true,
         };
 
-        const { error: updateError } = await supabase
+        // Data for the 'recipient_details' table
+        const recipientSpecificData = {
+            diagnosed_with: formData.get('diagnosed_with') as string,
+            required_organ: formData.get('required_organ') as string,
+        };
+
+        // Transaction
+        const { error: profileError } = await supabase
             .from('profiles')
-            .update(profileData)
+            .update(commonProfileData)
             .eq('id', user.id);
 
-        if (updateError) {
-            setError(updateError.message);
+        const { error: recipientError } = await supabase
+            .from('recipient_details')
+            .update(recipientSpecificData)
+            .eq('user_id', user.id);
+
+        if (profileError || recipientError) {
+            setError(profileError?.message || recipientError?.message || "An unknown error occurred.");
         } else {
             router.push('/dashboard');
         }
+        setIsLoading(false);
     };
 
     return (
@@ -53,6 +68,7 @@ export default function RecipientSetupPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                     {/* Form fields have been updated to match donor form for consistency */}
                     <div>
                         <label htmlFor="full_name" className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                         <input id="full_name" name="full_name" type="text" required className="w-full mt-1 input-field" />
@@ -69,6 +85,13 @@ export default function RecipientSetupPage() {
                         </select>
                     </div>
                     <div>
+                        <label htmlFor="rh_factor" className="text-sm font-medium">Rh Factor <span className="text-red-500">*</span></label>
+                        <select id="rh_factor" name="rh_factor" required className="w-full mt-1 input-field">
+                            <option value="">Select...</option>
+                            <option value="Positive">Positive (+)</option><option value="Negative">Negative (-)</option>
+                        </select>
+                    </div>
+                    <div>
                         <label htmlFor="diagnosed_with" className="text-sm font-medium">Currently diagnosed with</label>
                         <textarea id="diagnosed_with" name="diagnosed_with" rows={3} className="w-full mt-1 input-field"></textarea>
                     </div>
@@ -79,8 +102,8 @@ export default function RecipientSetupPage() {
                     
                     {error && <p className="text-sm text-center text-red-500">{error}</p>}
 
-                    <button type="submit" className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                        Complete Profile
+                    <button type="submit" disabled={isLoading} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
+                        {isLoading ? 'Saving...' : 'Complete Profile'}
                     </button>
                 </form>
             </div>

@@ -49,7 +49,7 @@ export default function SignUpPage() {
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full mt-1 input-field"
             >
               <option value="donor">A Donor</option>
               <option value="recipient">A Recipient</option>
@@ -65,7 +65,7 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 mt-1 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full mt-1 input-field"
             />
           </div>
 
@@ -77,7 +77,7 @@ export default function SignUpPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 mt-1 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full mt-1 input-field"
             />
           </div>
           

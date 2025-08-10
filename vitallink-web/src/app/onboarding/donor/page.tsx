@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/browser';
 
-// List of organs for checkboxes
 const organs = [
     "kidney", "liver", "pancreas", "intestine", "lung", 
     "corneas", "blood", "platelets", "stem cells", "bone marrow"
@@ -15,6 +14,7 @@ export default function DonorSetupPage() {
     const router = useRouter();
     const supabase = createClient();
     const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(false);
     const [selectedOrgans, setSelectedOrgans] = useState<string[]>([]);
 
     const handleCheckboxChange = (organ: string) => {
@@ -26,37 +26,50 @@ export default function DonorSetupPage() {
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setError(null);
+        setIsLoading(true);
 
         const formData = new FormData(event.currentTarget);
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
-            setError("You must be logged in to submit this form.");
+            setError("You must be logged in.");
+            setIsLoading(false);
             return;
         }
 
-        const profileData = {
-            id: user.id,
+        // Data for the 'profiles' table
+        const commonProfileData = {
             full_name: formData.get('full_name') as string,
             dob: formData.get('dob') as string,
             blood_group: formData.get('blood_group') as string,
             rh_factor: formData.get('rh_factor') as string,
+            profile_complete: true,
+        };
+        
+        // Data for the 'donor_details' table
+        const donorSpecificData = {
             hla_factor: formData.get('hla_factor') as string,
             diagnosed_with: formData.get('diagnosed_with') as string,
             willing_to_donate: selectedOrgans,
-            profile_complete: true, // Mark profile as complete
         };
 
-        const { error: updateError } = await supabase
+        // Transaction: Update both tables
+        const { error: profileError } = await supabase
             .from('profiles')
-            .update(profileData)
+            .update(commonProfileData)
             .eq('id', user.id);
-        
-        if (updateError) {
-            setError(updateError.message);
+
+        const { error: donorError } = await supabase
+            .from('donor_details')
+            .update(donorSpecificData)
+            .eq('user_id', user.id);
+
+        if (profileError || donorError) {
+            setError(profileError?.message || donorError?.message || "An unknown error occurred.");
         } else {
-            router.push('/dashboard'); // Redirect to dashboard on success
+            router.push('/dashboard');
         }
+        setIsLoading(false);
     };
 
     return (
@@ -68,6 +81,7 @@ export default function DonorSetupPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {/* The form fields remain the same */}
                     <div>
                         <label htmlFor="full_name" className="text-sm font-medium">Name <span className="text-red-500">*</span></label>
                         <input id="full_name" name="full_name" type="text" required className="w-full mt-1 input-field" />
@@ -112,8 +126,8 @@ export default function DonorSetupPage() {
                     
                     {error && <p className="text-sm text-center text-red-500">{error}</p>}
 
-                    <button type="submit" className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                        Complete Profile
+                    <button type="submit" disabled={isLoading} className="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
+                        {isLoading ? 'Saving...' : 'Complete Profile'}
                     </button>
                 </form>
             </div>

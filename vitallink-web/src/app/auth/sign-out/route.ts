@@ -1,12 +1,10 @@
 // src/app/auth/sign-out/route.ts
 
-import { createRouteHandlerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
 import { type NextRequest, NextResponse } from 'next/server'
 
 export async function POST(req: NextRequest) {
-  const cookieStore = cookies()
-  const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
+  const supabase = createClient()
 
   // Check if we have a session
   const {

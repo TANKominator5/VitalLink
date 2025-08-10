@@ -1,3 +1,4 @@
+//components/NavbarWrapper.tsx
 'use client'
 
 import { useEffect, useState } from 'react'

@@ -54,7 +54,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleSignIn} className="space-y-4">
-           <div>
+          <div>
             <label htmlFor="email" className="text-sm font-medium">Email <span className="text-red-500">*</span></label>
             <input
               id="email"
@@ -62,7 +62,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 mt-1 border rounded-md bg-transparent border-input focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full mt-1 input-field"
             />
           </div>
 
@@ -74,7 +74,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full px-3 py-2 mt-1 border rounded-md bg-transparent border-input focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full mt-1 input-field"
             />
           </div>
 
@@ -110,7 +110,7 @@ export default function LoginPage() {
             id="google-role"
             value={role}
             onChange={(e) => setRole(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md bg-background border-input focus:outline-none focus:ring-2 focus:ring-ring"
+            className="w-full input-field"
           >
             <option value="donor">Donor</option>
             <option value="recipient">Recipient</option>
