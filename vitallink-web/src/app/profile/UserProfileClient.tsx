@@ -54,6 +54,10 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
     const [isEditing, setIsEditing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    
+    // Safely initialize state, even if details is null
+    const [selectedOrgans, setSelectedOrgans] = useState<string[]>(details?.willing_to_donate || []);
+    
     const profile = initialProfile;
 
     // Early return if profile is null
@@ -64,9 +68,6 @@ export default function UserProfileClient({ initialProfile, details }: UserProfi
             </div>
         );
     }
-
-    // Safely initialize state, even if details is null
-    const [selectedOrgans, setSelectedOrgans] = useState<string[]>(details?.willing_to_donate || []);
     
     const handleCheckboxChange = (organ: string) => {
         setSelectedOrgans(prev => 
